@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-20 10:29:12
- * @LastEditTime: 2023-11-22 15:42:54
+ * @LastEditTime: 2023-11-23 16:23:11
  * @Description: des
  * @FilePath: \map-project\src\pages\index\part\index.vue
 -->
@@ -20,6 +20,8 @@
   </ul>
   <br>
   <a href="/cesium.html">进入cesium地图模块</a>
+  <br>
+  <a href="/cesium.html#/buildingScene">cesium建筑物图层</a>
  </template>
  
  <script>
