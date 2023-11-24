@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-22 15:50:49
- * @LastEditTime: 2023-11-23 18:13:19
+ * @LastEditTime: 2023-11-24 16:15:37
  * @Description: desc
  * @FilePath: \map-project\src\common\util\cesiumMethod.js
  */
@@ -16,13 +16,19 @@ import {
   ClassificationType,
   NearFarScalar,
   HorizontalOrigin, 
+  HeightReference,
   createOsmBuildingsAsync,
+  StripeMaterialProperty,
+  HeadingPitchRange,
   Color,
   Ion, 
   Math as CesiumMath, 
   Terrain, 
   Cesium3DTileStyle,
-  Viewer 
+  Viewer, 
+  defined,
+  defaultValue,
+  Cartesian2
 } from 'cesium';
 Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMDQxZTY1NC1jNDJlLTRhMjQtYWI1ZS05ODYyNGEzMTQxMzMiLCJpZCI6MTc4OTA2LCJpYXQiOjE3MDA2MTkwMTZ9.cP8Ppm9_5I6WJFimosuYEVLcbx8g0x5K-CBgmhFSkcw';
 
@@ -30,7 +36,12 @@ import "cesium/Build/Cesium/Widgets/widgets.css";
 class CesiumMethod {
   constructor(){
     this.viewer = null
-    this.points = {} // 点位对象集合
+    this.points = {
+      default:[]
+    } // 点位对象集合
+    this.polygons = {
+      default:[]
+    }  // 集合图形集合
     this.buildingsTileset = null // 建筑物图层
     this.tileConfig = {} // 瓦片图层存贮
   }
@@ -76,6 +87,23 @@ class CesiumMethod {
       return
     }
     this.viewer.flyTo(entity,option||{})
+  }
+
+  /**
+   * 将viewer 查看器定位到物体
+   * @param {entity} entity 3d物体
+   * @param {object} option  {heading   pitch }
+   */
+  zoomToEntity(entity, option={}){
+    if(option.heading && option.pitch) {
+      const heading = CesiumMath.toRadians(option.heading);
+      const pitch = CesiumMath.toRadians(option.pitch)
+      const headingPitchRange = new HeadingPitchRange(heading,pitch)
+      this.viewer.zoomTo(entity,headingPitchRange)
+    }else {
+      this.viewer.zoomTo(entity)
+    }
+    
   }
   /**
    *
@@ -222,7 +250,98 @@ class CesiumMethod {
       this.tileConfig[tileCode].show = flag
     }
   }
+  /**
+   * 
+   * @param {String} arrayType: 边界数据不包含高度： 2， 边界数据包含高度： 3
+   * @param {Object} Info: 经纬度数据
+   *   sets: {Array} 经纬度数据   eg：[[经度，纬度],[经度，纬度]]
+   *   name： 名称
+   *   id：标识
+   *   layerCode: 类别标识
+   * @param {Object} option : 样式属性配置
+   *        {
+   *          color: 填充颜色
+   *          opacity： 不透明度
+   *          outline： 是否显示outline
+   *          outlineColor： outline的颜色 
+   *        }
+   */
+  addPolygon(arrayType,info, option) {
+    let polygon = null
+    const sets = info.sets.flat()
+    if(arrayType=='2') {
+      polygon = new Entity({
+        name: info.name||'',
+        polygon: {
+          hierarchy: Cartesian3.fromDegreesArray(sets),
+          material: Color.fromCssColorString(option.color||'#ff0000').withAlpha(option.opacity||0.6),
+          outline: option.outline || false,
+          HeightReference: HeightReference.CLAMP_TO_GROUND, // 贴地
+          outlineColor: Color.fromCssColorString(option.outlineColor||'#000000'),
+          classificationType: ClassificationType.TERRAIN,
+        }
+      })
+    }else {
+      polygon = new Entity({
+        name: info.name||'',
+        polygon: {
+          hierarchy: Cartesian3.fromDegreesArrayHeights(sets),
+          height: option.height || 0,
+          material: Color.fromCssColorString(option.color||'#ff0000').withAlpha(option.opacity||1),
+          outline: option.outline || false,
+          HeightReference: HeightReference.CLAMP_TO_GROUND, // 贴地
+          outlineColor: Color.fromCssColorString(option.outlineColor||'#000000'),
+        }
+       
+      })
+    }
+    this.viewer.entities.add(polygon);
+    this.zoomToEntity(polygon,{heading:45,pitch:-40})
 
+    const layerCode = info.layerCode;
+    if (layerCode) {
+      if (this.polygons[layerCode] && this.polygons[layerCode].length > 0) {
+        this.polygons[layerCode].push(polygon);
+      } else {
+        this.polygons[layerCode] = [polygon];
+      }
+    } else {
+      this.polygons.default.push(polygon);
+    }
+    
+  }
+  /**
+   * 根据id获取实体对象
+   * @param {String} id 实体id
+   * 
+   */
+  getEntityById(id){
+    const entity = this.viewer.entities.getById(id)
+    return entity
+  }
+
+  /**
+   * 物体变动监听
+   * @param {Function} callBack  物体变动监听回调函数
+   */
+  entitiesChangeListen(callBack){
+    this.viewer.entities.collectionChanged.addEventListener(callBack)
+  }
+
+  /**
+   * 根据屏幕坐标采摘场景中的物体
+   * @param {Cartesian2} 屏幕坐标
+   */
+  pickEntity(windowPosition){
+    const picked = this.viewer.scene.pick(windowPosition);
+    if (defined(picked)) {
+      const id = defaultValue(picked.id, picked.primitive.id);
+      if (id instanceof Entity) {
+        return id;
+      }
+    }
+    return undefined
+  }
 
 
 }

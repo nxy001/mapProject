@@ -1,6 +1,15 @@
+/*
+ * @Author: NIXY
+ * @LastEditors: NIXY
+ * @Date: 2023-11-22 15:12:00
+ * @LastEditTime: 2023-11-24 10:36:44
+ * @Description: desc
+ * @FilePath: \map-project\src\pages\cesium\part\router.js
+ */
 import index from './index.vue'
 import flyto from './flyto.vue'
 import buildingScene from './buildingScene.vue'
+import entity from './entity.vue'
 const routes = [
   {
     path: '/',
@@ -16,6 +25,11 @@ const routes = [
     path: '/buildingScene',
     name: 'buildingScene',
     component: buildingScene
+  },
+  {
+    path: '/entity',
+    name: 'entity',
+    component: entity
   },
 ]
 export default routes
