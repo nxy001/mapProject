@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-20 10:29:19
- * @LastEditTime: 2023-11-23 18:13:02
+ * @LastEditTime: 2023-11-27 09:53:41
  * @Description: desc
  * @FilePath: \map-project\README.md
 -->
@@ -88,10 +88,34 @@ createOsmBuildingsAsync
  ```
 
 
-#### cesium基础场景加载
 
-#### cesium 点位加载
+#### cesium 物体加载
 
-#### cesium 边界加载
+- 物体加载使用使用Entity初始话一个物体，并指定物体的类型及相关的材质等
 
-#### cesium  事件模块
+- 加载一个几何多边形并进行贴地。 几何图形的点位集合不需要传入高度，同时设置  
+ HeightReference: HeightReference.CLAMP_TO_GROUND, 
+classificationType为ClassificationType.TERRAIN进行贴地操作
+
+- 注意获取点位集合的两种方法
+  fromDegreesArrayHeights： 获取一个包含高度的三维点位集合
+  fromDegreesArray：  获取一个不包含高度的二维点位集合
+- 相机控制： 使用zoomTo api 可以控制相机指向的物体，同时可以试着相机的航向等角度
+- 物体控制： 介绍几种跟物体相关的api
+
+  ```
+   entity = viewer.entities.getById("uniqueId") // 根据id获取物体
+  ``` 
+  ```
+    viewer.entities.collectionChanged.addEventListener('onChange') // 获取场景中物体集合变化事件
+  ```
+  ```
+   picked = viewer.scene.pick(windowPosition) // 根据屏幕坐标拾取物体
+  ```
+
+#### cesium  可视化图像
+- 地图底图加载使用imageryLayer添加图层，底图图层多数来源于web服务加载可能是异步的可以记住  fromProviderAsync来使用
+- 底图加载依赖于底图提供程序加载底图，底图提供程序有很多，OpenStreetMapImageryProvider\SingleTileImageryProvider\TileCoordinatesImageryProvider\BingMapsImageryProvider等等
+- 底图可以调整样式  比如亮度brightness 透明度alpha，等等
+- 底图可以使用 raise提升显示层级   lower 下调显示层级  可以remove底图
+- webgl指明 跨域媒体资源 图片视频  只有经过跨域资源共享（cors）验证的情况下才能用作webgl纹理

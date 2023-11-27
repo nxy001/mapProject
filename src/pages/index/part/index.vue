@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-20 10:29:12
- * @LastEditTime: 2023-11-24 10:38:14
+ * @LastEditTime: 2023-11-27 10:23:26
  * @Description: des
  * @FilePath: \map-project\src\pages\index\part\index.vue
 -->
@@ -26,6 +26,9 @@
   <br>
   <br>
   <a href="/cesium.html#/entity">cesium实体</a>
+  <br>
+  <br>
+  <a href="/cesium.html#/imageLayer">可视化图像</a>
  </template>
  
  <script>

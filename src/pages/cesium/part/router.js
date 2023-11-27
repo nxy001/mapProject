@@ -10,6 +10,7 @@ import index from './index.vue'
 import flyto from './flyto.vue'
 import buildingScene from './buildingScene.vue'
 import entity from './entity.vue'
+import imageLayer from './imageLayer.vue'
 const routes = [
   {
     path: '/',
@@ -30,6 +31,11 @@ const routes = [
     path: '/entity',
     name: 'entity',
     component: entity
+  },
+  {
+    path: '/imageLayer',
+    name: 'imageLayer',
+    component: imageLayer
   },
 ]
 export default routes

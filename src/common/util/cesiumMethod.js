@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-22 15:50:49
- * @LastEditTime: 2023-11-24 16:15:37
+ * @LastEditTime: 2023-11-27 14:29:23
  * @Description: desc
  * @FilePath: \map-project\src\common\util\cesiumMethod.js
  */
@@ -28,7 +28,12 @@ import {
   Viewer, 
   defined,
   defaultValue,
-  Cartesian2
+  ImageryLayer,
+  IonWorldImageryStyle,
+  IonImageryProvider,
+  SingleTileImageryProvider,
+  Cartesian2,
+  Rectangle
 } from 'cesium';
 Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMDQxZTY1NC1jNDJlLTRhMjQtYWI1ZS05ODYyNGEzMTQxMzMiLCJpZCI6MTc4OTA2LCJpYXQiOjE3MDA2MTkwMTZ9.cP8Ppm9_5I6WJFimosuYEVLcbx8g0x5K-CBgmhFSkcw';
 
@@ -44,6 +49,7 @@ class CesiumMethod {
     }  // 集合图形集合
     this.buildingsTileset = null // 建筑物图层
     this.tileConfig = {} // 瓦片图层存贮
+    this.imageLayers = {} // 可视化图片地图
   }
   /**
    * 创建查看器
@@ -343,6 +349,79 @@ class CesiumMethod {
     return undefined
   }
 
+  /**
+   * 添加必应地图
+   * @param {String} layerCode 图层索引字段
+   * @param {String} type 仅支持三种类型  AERIAL： 航空图像，AERIAL_WITH_LABELS：带有道路覆盖层的航空图像，ROAD：没有额外图像的道路
+   */
+  addImageLayerFromWorld(layerCode,type){
+    const layers = this.viewer.imageryLayers
+    const worldlayer = ImageryLayer.fromWorldImagery({
+      style: IonWorldImageryStyle[type]
+    })
+    layers.add(worldlayer)
+    this.imageLayers[layerCode] = worldlayer
+
+  }
+
+  /**
+   * 根据ion 资源id加载图层
+   * @param {String} layerCode 图层索引字段
+   * @param {String|Number} id ion资源编码
+   * @param {Object} option 样式设置
+   *  eg
+   *  {
+   *    alpha: 不透明度
+   *    brightness: 亮度  
+   *  }
+   */
+  addImageLayerFromAssetId(layerCode,id,option ={}){
+    const layers = this.viewer.imageryLayers
+    const imageLayer = ImageryLayer.fromProviderAsync(
+      IonImageryProvider.fromAssetId(id)
+    );
+    layers.add(imageLayer)
+    for(let key in option) {
+      imageLayer[key] = option[key]
+    }
+    this.imageLayers[layerCode] = imageLayer
+  }
+
+  /**
+   * 根据图片 创建一个图层
+   * @param {String} layerCode 图层索引字段
+   * @param {Image|Url} image 图片
+   * @param {Object} option {
+   *    points: 必填，不图片覆盖的经纬度范围 一个左下角经纬度 一个是右上角经纬度
+   *          eg: [ -75.0,28.0,-67.0,29.75]
+   * }
+   *  
+   */
+  addImageLayerFromImage(layerCode,image,option){
+    const layers = this.viewer.imageryLayers
+    const imageLayer = ImageryLayer.fromProviderAsync(
+      SingleTileImageryProvider.fromUrl(
+        image,
+        {
+          rectangle: Rectangle.fromDegrees(
+           ...option.points
+          )
+        }
+      )
+    )
+    layers.add(imageLayer)
+    this.imageLayers[layerCode] = imageLayer  
+  }
+
+  /**
+   * 根据底图索引删除对应的底图
+   * @param {*} layerCode 
+   */
+  removeImageLayer(layerCode) {
+    if(this.imageLayers[layerCode]) {
+      this.viewer.imageryLayers.remove(this.imageLayers[layerCode])
+    }
+  }
 
 }
 export default CesiumMethod
