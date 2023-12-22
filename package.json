@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "cesium": "^1.111.0",
+    "cesium-heatmap": "0.0.4",
     "core-js": "^3.8.3",
     "html-loader": "^1.1.0",
     "less": "^4.2.0",

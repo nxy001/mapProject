@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-22 15:50:49
- * @LastEditTime: 2023-11-27 14:29:23
+ * @LastEditTime: 2023-12-13 13:51:17
  * @Description: desc
  * @FilePath: \map-project\src\common\util\cesiumMethod.js
  */
@@ -33,7 +33,25 @@ import {
   IonImageryProvider,
   SingleTileImageryProvider,
   Cartesian2,
-  Rectangle
+  ScreenSpaceEventHandler,
+  ScreenSpaceEventType,
+  EasingFunction,
+  Transforms,
+  Rectangle,
+  GeometryInstance,
+  RectangleGeometry,
+  EllipsoidSurfaceAppearance,
+  Material,
+  Primitive,
+  ColorGeometryInstanceAttribute,
+  PerInstanceColorAppearance,
+  EllipsoidGeodesic,
+  EllipsoidGeometry,
+  Matrix4,
+  Geometry,
+  CircleGeometry,
+  ParticleSystem,
+  CircleEmitter,
 } from 'cesium';
 Ion.defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIzMDQxZTY1NC1jNDJlLTRhMjQtYWI1ZS05ODYyNGEzMTQxMzMiLCJpZCI6MTc4OTA2LCJpYXQiOjE3MDA2MTkwMTZ9.cP8Ppm9_5I6WJFimosuYEVLcbx8g0x5K-CBgmhFSkcw';
 
@@ -423,5 +441,183 @@ class CesiumMethod {
     }
   }
 
+  /**
+   * 摄像机flyto 一个点
+   * @param {Array} point 点位 [经度，纬度，高度]
+   * @param {*} option 
+   *  {
+   *      heading: 航向，
+   *      pitch: 俯仰角
+   *      roll： 滚动
+   *      easing: 动画类型
+   *      during： 动画时间
+   *  }
+   * callBack 动画结束回调
+   */
+  cameraFlyTo(point,option={},callBack = function(){}){
+    const orientation = {};
+    if(option.heading) orientation.heading = CesiumMath.toRadians(option.heading)
+    if(option.pitch) orientation.pitch = CesiumMath.toRadians(option.pitch)
+    if(option.roll) orientation.roll = CesiumMath.toRadians(option.roll)
+    if(point) {
+      this.viewer.camera.flyTo(
+        {
+          destination: Cartesian3.fromDegrees(...point),
+          orientation,
+          complete: callBack,
+          easingFunction: option.easing?EasingFunction[option.easing]:EasingFunction.LINEAR_NONE,
+          duration: option.duration||3
+        }
+      )
+    }
+  }
+
+  /**
+   * 添加场景事件监听
+   */
+  mapListen(){
+    const _this = this
+    var handler = new ScreenSpaceEventHandler(this.viewer.canvas);
+    handler.setInputAction(function (event) {
+      var pickedPosition = _this.viewer.scene.pickPosition(event.position);
+      if (defined(pickedPosition)) {
+        console.log(pickedPosition);
+        return 
+      }
+    }, ScreenSpaceEventType.LEFT_CLICK)
+  }
+
+  /**
+   * 相机定位聚焦到一个点位
+   */
+  lookAtTransform(center){
+    center = Cartesian3.fromDegrees(...center)
+    const transform = Transforms.eastNorthUpToFixedFrame(center);
+    this.viewer.scene.camera.lookAtTransform(
+      transform,
+      new HeadingPitchRange(0, -Math.PI / 4, 2900))
+  }
+  /**
+   * 添加一个矩形对象
+   * @param {Array} point 点位数组  （左下 右上点位）
+   */
+  addRectangel(point){
+    const instance = new GeometryInstance({
+      geometry: new RectangleGeometry({
+        rectangle: Rectangle.fromDegrees(...point),
+        vertexFormat: EllipsoidSurfaceAppearance.VERTEX_FORMAT
+      }),
+      attributes : {
+        color : new ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 0.8)
+      }
+    })
+    var anotherInstance = new GeometryInstance({
+      geometry : new RectangleGeometry({
+        rectangle : Rectangle.fromDegrees(-85.0, 20.0, -75.0, 30.0),
+        vertexFormat : EllipsoidSurfaceAppearance.VERTEX_FORMAT
+      }),
+      attributes : {
+        color : new ColorGeometryInstanceAttribute(0.0, 1.0, 1.0, 0.8)
+      }
+    });
+    const primitive = new Primitive({
+      geometryInstances: [anotherInstance,instance],
+      // appearance: new EllipsoidSurfaceAppearance({
+      //   material: Material.fromType('Stripe')
+      // })
+      appearance : new PerInstanceColorAppearance()
+    })
+    this.viewer.scene.primitives.add(primitive)
+  }
+
+  /**
+   * 测试方法  添加连个椭球体
+   */
+  addEllipsoidGeometry(){
+    const ellipsoidGeometry = new EllipsoidGeometry({
+      vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+      radii: new Cartesian3(300000.0,200000.0,150000.0)
+    })
+    const cyanEllipsoidInstance = new GeometryInstance({
+      geometry: ellipsoidGeometry,
+      modelMatrix: Matrix4.multiplyByTranslation(
+        Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-100.0,40.0)),
+        new Cartesian3(0.0,0.0,150000.0),
+        new Matrix4()
+      ),
+      attributes: {
+        color: ColorGeometryInstanceAttribute.fromColor(Color.CYAN)
+      }
+    })
+    const orangeEllipsoidInstance = new GeometryInstance({
+      geometry: ellipsoidGeometry,
+      modelMatrix: Matrix4.multiplyByTranslation(
+        Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(-100.0,40.0)),
+        new Cartesian3(0.0,0.0,450000.0),
+        new Matrix4()
+      ),
+      attributes: {
+        color: ColorGeometryInstanceAttribute.fromColor(Color.ORANGE)
+      }
+    })
+    const primitive = new Primitive({
+      geometryInstances:[cyanEllipsoidInstance,orangeEllipsoidInstance],
+      appearance: new PerInstanceColorAppearance({
+        translucent: false,
+        closed: true
+      })
+    })
+    this.viewer.scene.primitives.add(primitive)
+  }
+
+  /**
+   * 测试：更新primitive样式
+   */
+  changePrimitiveAppearce(){
+    const circleInstance  = new GeometryInstance({
+      geometry: new CircleGeometry({
+        center: Cartesian3.fromDegrees(-95.0,43.0,300.0),
+        radius: 250000.0,
+        vertexFormat: PerInstanceColorAppearance.VERTEX_FORMAT,
+      }),
+      attributes: {
+        color: ColorGeometryInstanceAttribute.fromColor(new Color(1.0,0.0,0.0,0.5)),
+      },
+      id: 'circle'
+    })
+    const primitive  = new Primitive({
+      geometryInstances: circleInstance,
+      appearance: new PerInstanceColorAppearance({
+        translucent: false,
+        closed: true,
+      })
+    })
+    this.viewer.scene.primitives.add(primitive)
+    setInterval(()=>{
+      const attributes = primitive.getGeometryInstanceAttributes('circle')
+      attributes.color = ColorGeometryInstanceAttribute.toValue(new Color.fromRandom({alpha: 0.5}))
+    },2000)
+  }
+
+  /**
+   *测试： 添加一个粒子系统
+   */
+  addParticle(){
+    const particle = new ParticleSystem({
+      image: require('../../assets/snow.png'),
+      imageSize: new Cartesian2(20,20),
+      startScale:1.0,
+      endScale: 4.0,
+      particleLife: 1.0,
+      speed: 5.0,
+      emitter: new CircleEmitter(0.5),
+      emissionRate: 5.0,
+      modelMatrix: Matrix4.fromTranslation(
+        this.viewer.scene.camera.position
+      ),
+      // lifetime: 16.0,
+    })
+    this.viewer.scene.primitives.add(particle)
+  }
 }
 export default CesiumMethod

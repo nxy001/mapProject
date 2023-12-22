@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-20 10:29:12
- * @LastEditTime: 2023-11-27 10:23:26
+ * @LastEditTime: 2023-12-14 15:08:46
  * @Description: des
  * @FilePath: \map-project\src\pages\index\part\index.vue
 -->
@@ -29,6 +29,15 @@
   <br>
   <br>
   <a href="/cesium.html#/imageLayer">可视化图像</a>
+  <br>
+  <br>
+  <a href="/cesium.html#/camera">control the camera</a>
+  <br>
+  <br>
+  <a href="/cesium.html#/primitive">primitive</a>
+  <br>
+  <br>
+  <a href="/cesium.html#/apiScene">常见场景api测试</a>
  </template>
  
  <script>

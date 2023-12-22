@@ -2,7 +2,7 @@
  * @Author: NIXY
  * @LastEditors: NIXY
  * @Date: 2023-11-20 10:29:19
- * @LastEditTime: 2023-11-27 09:53:41
+ * @LastEditTime: 2023-11-27 15:24:59
  * @Description: desc
  * @FilePath: \map-project\README.md
 -->
@@ -119,3 +119,10 @@ classificationType为ClassificationType.TERRAIN进行贴地操作
 - 底图可以调整样式  比如亮度brightness 透明度alpha，等等
 - 底图可以使用 raise提升显示层级   lower 下调显示层级  可以remove底图
 - webgl指明 跨域媒体资源 图片视频  只有经过跨域资源共享（cors）验证的情况下才能用作webgl纹理
+
+
+#### cesium 地形服务
+
+- cesium支持集中cesium地形提供程序添加地形服务eg： CesiumTerrainProvider、GoogleEarthEnterpriseTerrainProvider、VRTheWorldTerrainProvider、EllipsoidTerrainProvider。
+
+- cesium地形服务可以提供开启 地形光照、跟水源服务。
